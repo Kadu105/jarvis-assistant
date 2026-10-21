@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;background:#020914;color:#70eaff;
+  font-family:Arial,sans-serif;display:flex;justify-content:center;
+  align-items:center;overflow-x:hidden;
+  background-image:radial-gradient(ellipse at center,#07304b 0%,#020914 65%);
+}
+.app{width:100%;max-width:700px;padding:24px;text-align:center}
+.top{letter-spacing:7px;font-size:13px;color:#8df3ff}
+h1{font-size:clamp(34px,9vw,65px);letter-spacing:8px;margin:15px 0 4px;
+text-shadow:0 0 22px #00cfff}
+.subtitle{font-size:12px;letter-spacing:3px;color:#6ba6bc}
+.hud{width:230px;height:230px;margin:35px auto;position:relative;
+display:grid;place-items:center}
+.ring{position:absolute;border:2px solid #12cfff;border-radius:50%;
+box-shadow:0 0 20px #008cff,inset 0 0 20px #008cff}
+.r1{width:100%;height:100%;border-style:dashed;animation:gira 18s linear infinite}
+.r2{width:78%;height:78%;border-color:#70f5ff;animation:gira 9s linear infinite reverse}
+.r3{width:54%;height:54%;border-width:4px}
+.core{width:28%;height:28%;border-radius:50%;background:#8ff8ff;
+box-shadow:0 0 25px #00cfff,0 0 65px #008cff;animation:pulsa 2s infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+@keyframes pulsa{50%{transform:scale(.8);opacity:.65}}
+.status{font-size:12px;letter-spacing:3px;margin:20px}
+.chat{background:#061522;border:1px solid #14516b;border-radius:12px;
+padding:15px;text-align:left;min-height:100px;max-height:220px;overflow:auto}
+.msg{margin:9px 0;line-height:1.5;font-size:14px;overflow-wrap:anywhere}
+.jarvis{color:#70eaff}.user{color:#fff}
+.controls{display:flex;gap:10px;margin-top:14px}
+input{min-width:0;flex:1;background:#071b2b;border:1px solid #17617d;
+border-radius:8px;padding:14px;color:white;font-size:15px;outline:none}
+button{background:#063a56;color:#83f4ff;border:1px solid #15cfff;
+border-radius:8px;padding:13px;cursor:pointer}
+button:active{background:#08779c}
+.mic{margin-top:12px;width:100%;font-size:15px;letter-spacing:2px}
+.note{font-size:11px;color:#60899a;margin-top:18px}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="top">STARK INDUSTRIES // SYSTEM ONLINE</div>
+  <h1>J.A.R.V.I.S.</h1>
+  <div class="subtitle">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+
+  <div class="hud">
+    <div class="ring r1"></div>
+    <div class="ring r2"></div>
+    <div class="ring r3"></div>
+    <div class="core"></div>
+  </div>
+
+  <div class="status" id="status">SISTEMA INICIALIZADO</div>
+
+  <section class="chat" id="chat" aria-live="polite">
+    <div class="msg jarvis"><b>JARVIS:</b> Sistemas iniciados. Olá, senhor. Estou aguardando seu comando.</div>
+  </section>
+
+  <div class="controls">
+    <input id="entrada" placeholder="Digite seu comando..." autocomplete="off">
+    <button id="enviar">ENVIAR</button>
+  </div>
+  <button class="mic" id="mic">🎙️ FALAR COM JARVIS</button>
+  <div class="note">PROTÓTIPO 01 • INTERFACE DE ASSISTENTE VIRTUAL</div>
+</main>
+
+<script>
+const chat=document.getElementById('chat');
+const entrada=document.getElementById('entrada');
+const statusEl=document.getElementById('status');
+const mic=document.getElementById('mic');
+
+function mostrar(tipo,texto){
+  const linha=document.createElement('div');
+  linha.className='msg '+tipo;
+  const nome=document.createElement('b');
+  nome.textContent=tipo==='user'?'VOCÊ: ':'JARVIS: ';
+  linha.appendChild(nome);
+  linha.appendChild(document.createTextNode(texto));
+  chat.appendChild(linha);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function falar(texto){
+  if(!('speechSynthesis' in window))return;
+  speechSynthesis.cancel();
+  const voz=new SpeechSynthesisUtterance(texto);
+  voz.lang='pt-BR';
+  voz.rate=1;
+  speechSynthesis.speak(voz);
+}
+
+function responder(texto){
+  const t=texto.toLowerCase();
+  if(t.includes('olá')||t.includes('oi')||t.includes('e aí'))
+    return 'Olá, senhor. É um prazer falar com você.';
+  if(t.includes('seu nome')||t.includes('quem é você'))
+    return 'Sou JARVIS, seu assistente virtual em fase de desenvolvimento.';
+  if(t.includes('horas')||t.includes('hora são'))
+    return 'A hora atual é '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'.';
+  if(t.includes('data')||t.includes('dia é hoje'))
+    return 'Hoje é '+new Date().toLocaleDateString('pt-BR')+'.';
+  if(t.includes('ajuda')||t.includes('comandos'))
+    return 'Você pode me cumprimentar, perguntar meu nome, pedir a hora ou perguntar a data.';
+  if(t.includes('obrigado')||t.includes('valeu'))
+    return 'Sempre à disposição, senhor.';
+  if(t.includes('tchau'))
+    return 'Até mais, senhor. Permanecerei em modo de espera.';
+  return 'Recebi seu comando: '+texto+'. Ainda estou aprendendo. Minha conexão com uma inteligência artificial avançada será adicionada numa próxima etapa.';
+}
+
+function enviar(){
+  const texto=entrada.value.trim();
+  if(!texto)return;
+  mostrar('user',texto);
+  entrada.value='';
+  statusEl.textContent='PROCESSANDO COMANDO...';
+  const resposta=responder(texto);
+  setTimeout(()=>{
+    mostrar('jarvis',resposta);
+    falar(resposta);
+    statusEl.textContent='SISTEMA ONLINE';
+  },350);
+}
+
+document.getElementById('enviar').addEventListener('click',enviar);
+entrada.addEventListener('keydown',e=>{if(e.key==='Enter')enviar()});
+
+const Reconhecimento=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(Reconhecimento){
+  const reconhecimento=new Reconhecimento();
+  reconhecimento.lang='pt-BR';
+  reconhecimento.continuous=false;
+  reconhecimento.interimResults=false;
+  reconhecimento.onstart=()=>{
+    statusEl.textContent='ESTOU OUVINDO...';
+    mic.textContent='🔴 OUVINDO...';
+  };
+  reconhecimento.onresult=e=>{
+    entrada.value=e.results[0][0].transcript;
+    enviar();
+  };
+  reconhecimento.onerror=()=>{
+    statusEl.textContent='NÃO CONSEGUI OUVIR. TENTE NOVAMENTE.';
+  };
+  reconhecimento.onend=()=>{
+    mic.textContent='🎙️ FALAR COM JARVIS';
+    if(statusEl.textContent==='ESTOU OUVINDO...')
+      statusEl.textContent='SISTEMA ONLINE';
+  };
+  mic.addEventListener('click',()=>{
+    try{reconhecimento.start()}catch(e){}
+  });
+}else{
+  mic.addEventListener('click',()=>{
+    statusEl.textContent='DITADO POR VOZ NÃO SUPORTADO NESTE NAVEGADOR';
+  });
+}
+</script>
+</body>
+</html>
